@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Grid", "Grid.csproj", "{CE0EAF95-6EFA-4586-9A66-CE9DE9DA309C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "..\Tests\Tests.csproj", "{5FD50A0F-25FC-4DBA-933E-86541DE3907D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE0EAF95-6EFA-4586-9A66-CE9DE9DA309C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE0EAF95-6EFA-4586-9A66-CE9DE9DA309C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE0EAF95-6EFA-4586-9A66-CE9DE9DA309C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE0EAF95-6EFA-4586-9A66-CE9DE9DA309C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FD50A0F-25FC-4DBA-933E-86541DE3907D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FD50A0F-25FC-4DBA-933E-86541DE3907D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FD50A0F-25FC-4DBA-933E-86541DE3907D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FD50A0F-25FC-4DBA-933E-86541DE3907D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
