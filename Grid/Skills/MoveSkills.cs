@@ -71,27 +71,55 @@ namespace G
 
         public static INodeInformation GreedyMoveToFirstAgent(IAgentUpdateInfo agentUpdate, GAgent agent, IDeck deck)
         {
-            List<IAgentInfo> possibleAgents = GetPossibleNodes(agentUpdate.Node);
+            List<INodeInformation> nextLevelNodes = new List<INodeInformation> { agentUpdate.Node };
+            List<INodeInformation> possibleNodes = NextLevelFirstAgent(deck, nextLevelNodes, 1,agentUpdate.Owner.Id);
 
-            if (!possibleAgents.Any())
+            if (!possibleNodes.Any())
             {
-                foreach (INodeInformation nodeInformation in agentUpdate.Node.Exits.Values)
+                nextLevelNodes = GetNextLevelNodes(nextLevelNodes);
+                possibleNodes = NextLevelFirstAgent(deck, nextLevelNodes, 2,agentUpdate.Owner.Id);
+
+                if (!possibleNodes.Any())
                 {
-                    possibleAgents.AddRange(GetPossibleNodes(nodeInformation));
+                    nextLevelNodes = GetNextLevelNodes(nextLevelNodes);
+                    possibleNodes = NextLevelFirstAgent(deck, nextLevelNodes, 3,agentUpdate.Owner.Id);
+                
+                    if (!possibleNodes.Any())
+                    {
+                        nextLevelNodes = GetNextLevelNodes(nextLevelNodes);
+                        possibleNodes = NextLevelFirstAgent(deck, nextLevelNodes, 4,agentUpdate.Owner.Id);
+
+                        if (!possibleNodes.Any())
+                        {
+                            nextLevelNodes = GetNextLevelNodes(nextLevelNodes);
+                            possibleNodes = NextLevelFirstAgent(deck, nextLevelNodes, 5,agentUpdate.Owner.Id);
+                        }     
+                
+                    }     
+       
                 }
 
-                deck.Trace("No local agents, possible second level=" + possibleAgents.Count, TraceType.Information);    
             }
 
-            IOrderedEnumerable<IAgentInfo> enemiesOrderByStack = possibleAgents.Where(x=> x.Stack > 0).OrderBy(x => x.Stack);
+            IEnumerable<INodeInformation> nodesWeakestEnemiesAndMostFriends = new List<INodeInformation>();
+            List<IAgentInfo> enemiesOrderByStack = new List<IAgentInfo>();
+            if (possibleNodes.Any())
+            {
+                var possibleAgents = new List<IAgentInfo>();
+                foreach (var nodeInformation in possibleNodes)
+                {
+                    possibleAgents.AddRange(nodeInformation.OpposingAgents);
+                }
 
-            IEnumerable<IAgentInfo> enemiesWithMinimumStack = enemiesOrderByStack.Where(x => x.Stack == enemiesOrderByStack.First().Stack);
+                enemiesOrderByStack = possibleAgents.Where(x=> x.Stack > 0).OrderBy(x => x.Stack).ToList();
+
+                IEnumerable<IAgentInfo> enemiesWithMinimumStack = enemiesOrderByStack.Where(x => x.Stack == enemiesOrderByStack.First().Stack);
             
-            IEnumerable<INodeInformation> nodesWeakestEnemiesAndMostFriends = enemiesWithMinimumStack.Select(x=> x.Node)
-                //no node fx
-                .Where(x => !x.Effects.Contains(NodeEffect.Struts))
-                
-                .OrderByDescending(y => y.MyAgents.Count()).ToList();
+                nodesWeakestEnemiesAndMostFriends = enemiesWithMinimumStack.Select(x=> x.Node)
+                    //no node fx
+                    .Where(x => !x.Effects.Contains(NodeEffect.Struts))     
+                    .OrderByDescending(y => y.MyAgents.Count()).ToList();
+            }
 
             if (nodesWeakestEnemiesAndMostFriends.Any())
             {
@@ -111,16 +139,54 @@ namespace G
            return PickMove(agentUpdate, nodesWeakestEnemiesAndMostFriends, agent);         
         }
 
-        private static List<IAgentInfo> GetPossibleNodes(INodeInformation information)
+        private static List<INodeInformation> GetNextLevelNodes(IEnumerable<INodeInformation> nodeInformations)
         {
-            List<IAgentInfo> possibleNodes = new List<IAgentInfo>();
- 
-            foreach (IEnumerable<IAgentInfo> targets in information.Exits.Values
-                .Where(nodeInformation => nodeInformation.OpposingAgents.Any())
-                .Select(x => x.OpposingAgents))
+            List<INodeInformation> newList = new List<INodeInformation>();
+            foreach (var information in nodeInformations)
             {
-                possibleNodes.AddRange(targets);
+                foreach (var nodeInformation in information.Exits.Values)
+                {
+                    if (nodeInformations.Where(x => Id(x) == Id(nodeInformation)).Count() == 0)
+                    {
+                        newList.Add(nodeInformation);
+                    }
+                }
             }
+          
+            return newList;
+        }
+
+        private static string Id(INodeInformation p0)
+        {
+            return p0.Row +";" + p0.Layer +";" + p0.Column;
+        }
+
+        private static List<INodeInformation> NextLevelFirstAgent(IDeck deck, IEnumerable<INodeInformation> nodeInformations, int i, Guid myId)
+        {
+            List<INodeInformation> possibleNodes = new List<INodeInformation>();
+            int agents = 0;
+            int enemies = 0;
+            string names = string.Empty;
+            foreach (INodeInformation nodeInformation in nodeInformations)
+            {
+                ICollection<INodeInformation> informations = nodeInformation.Exits.Values;
+
+                possibleNodes.AddRange(informations.Where(nodeInformation1 => nodeInformation1.OpposingAgents.Any()));
+
+                foreach (var information in informations)
+                {
+                    IEnumerable<IAgentInfo> nodeAgents = information.AllAgents;
+                    agents += nodeAgents.Count();
+                    IEnumerable<IAgentInfo> nodeEnemies = nodeAgents.Where(x => myId.ToString() != x.Owner.Id.ToString() );
+                    possibleNodes.AddRange(nodeEnemies.Select(x=>x.Node));
+                    enemies += nodeEnemies.Count();
+                    names = nodeEnemies.Aggregate(names, (current, nodeEnemy) => current + nodeEnemy.Owner.DisplayHandle + ";");
+                }
+
+            }
+
+            deck.Trace(string.Format("I'm in level {0} with possible attack nodes {1}, allagents {2}, opposingagents {3} and {4} nodes; Enemies={5}", i, possibleNodes.Count, agents, enemies, nodeInformations.Count(),names), TraceType.Information);
+     
             return possibleNodes;
         }
 
@@ -142,8 +208,7 @@ namespace G
                 targetNode = agentUpdate.Node;         
             }
 
-            agentUpdate.Node.RouteTo(agentUpdate.Node, targetNode.Layer, targetNode.Row, targetNode.Column);
-
+         
             return targetNode;
         }
 

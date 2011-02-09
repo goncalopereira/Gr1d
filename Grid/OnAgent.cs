@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using G.Skills;
+﻿using G.Skills;
 using Gr1d.Api.Agent;
 using Gr1d.Api.Deck;
 using Gr1d.Api.Skill;
@@ -64,11 +63,5 @@ namespace G
 	            }
 	        }
 	    }
-
-	    private static bool HaveAtLeastTwoMoreAgentsThanEnemiesInSameNode(IAgentUpdateInfo update)
-	    {
-	        return update.Node.MyAgents.Count() > update.Node.OpposingAgents.Count()+1;
-	    }
-
-    }
+	}
 }
